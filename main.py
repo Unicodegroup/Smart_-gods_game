@@ -17,5 +17,4 @@ def send_welcome(message):
 
 
 
-
 bot.infinity_polling()
