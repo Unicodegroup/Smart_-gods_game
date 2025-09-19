@@ -1,24 +1,25 @@
 services:
-  db_bot:
+  db:
     image: postgres:15-alpine
-    container_name: db_bot
+    container_name: db
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
       POSTGRES_DB: postgres
     volumes:
       - ./postgres/data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
     healthcheck:
       test: ["CMD", "pg_isready", "-U", "postgres", "-d", "postgres"]
       interval: 10s
       retries: 5
       start_period: 30s
       timeout: 10s
-    ports:
-      - "5432:5432"
-  redis_bot:
+
+  redis:
     image: redis:alpine
-    container_name: redis_bot
+    container_name: redis
     ports:
       - "6379:6379"
     healthcheck:
@@ -28,4 +29,29 @@ services:
       start_period: 30s
       timeout: 10s
 
+  bot:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: bot
+    image: smart_gods_game_bot   
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    environment:
+      SQLALCHEMY_DATABASE_URL: postgresql://postgres:postgres@db:5432/postgres
+      REDIS_URL: redis://redis:6379
+      API_TOKEN: 8300585282:AAHsMFGaseY597bZipb7kTaHkA-8v_QMZfE
+
+    volumes:
+      - .:/usr/src/app   
+    command: python main.py
+    ports:
+      - "8000:8000"
+
+
+volumes:
+  postgres_data:
 
